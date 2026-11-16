@@ -18,14 +18,12 @@ jobs:
         run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o todus_relay_vps .
       - name: Create .env file
         run: |
-          cat > .env << ENVEOF
-          PROXY_SHARED_SECRET=${{ secrets.PROXY_SHARED_SECRET }}
-          TODUS_BASE_URL=${{ secrets.TODUS_BASE_URL }}
-          TODUS_VERIFY_TLS=1
-          POLL_INTERVAL=0.05
-          QUEUE_POLL_INTERVAL=0.5
-          MAX_SESSIONS=64
-          ENVEOF
+          echo "PROXY_SHARED_SECRET=${{ secrets.PROXY_SHARED_SECRET }}" > .env
+          echo "TODUS_BASE_URL=${{ secrets.TODUS_BASE_URL }}" >> .env
+          echo "TODUS_VERIFY_TLS=1" >> .env
+          echo "POLL_INTERVAL=0.05" >> .env
+          echo "QUEUE_POLL_INTERVAL=0.5" >> .env
+          echo "MAX_SESSIONS=64" >> .env
       - name: Run Relay Server
         run: |
           chmod +x todus_relay_vps

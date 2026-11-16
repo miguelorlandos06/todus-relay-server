@@ -86,3 +86,19 @@ func (s *TodusStore) Put(key string, data []byte) bool {
 	}
 	return false
 }
+
+func (s *TodusStore) Delete(key string) bool {
+	targetURL := s.buildURL(key)
+	req, err := http.NewRequest(http.MethodDelete, targetURL, nil)
+	if err != nil {
+		return false
+	}
+	req.Header.Set("User-Agent", "curl/8.23.0")
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return false
+	}
+	io.Copy(io.Discard, resp.Body)
+	resp.Body.Close()
+	return resp.StatusCode == 200 || resp.StatusCode == 202 || resp.StatusCode == 204 || resp.StatusCode == 404
+}

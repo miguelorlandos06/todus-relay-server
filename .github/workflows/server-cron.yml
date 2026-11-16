@@ -1,0 +1,34 @@
+name: Run Go Relay Server (Cron)
+
+on:
+  schedule:
+    - cron: '0 */5 * * *'
+  workflow_dispatch:
+
+jobs:
+  run-server:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      - name: Build Server Binary
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o todus_relay_vps .
+      - name: Create .env file
+        run: |
+          cat > .env << ENVEOF
+          PROXY_SHARED_SECRET=${{ secrets.PROXY_SHARED_SECRET }}
+          TODUS_BASE_URL=${{ secrets.TODUS_BASE_URL }}
+          TODUS_VERIFY_TLS=1
+          POLL_INTERVAL=0.05
+          QUEUE_POLL_INTERVAL=0.5
+          MAX_SESSIONS=64
+          ENVEOF
+      - name: Run Relay Server
+        run: |
+          chmod +x todus_relay_vps
+          ./todus_relay_vps &
+          SERVER_PID=$!
+          while kill -0 $SERVER_PID 2>/dev/null; do sleep 60; done
